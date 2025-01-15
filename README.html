@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>TestTimelockDAO</title>
+            <style>
+/* From extension vscode.github */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only],
+.vscode-high-contrast:not(.vscode-high-contrast-light) img[src$=\#gh-light-mode-only],
+.vscode-high-contrast-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+</style>
+            
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+<style>
+:root {
+  --color-note: #0969da;
+  --color-tip: #1a7f37;
+  --color-warning: #9a6700;
+  --color-severe: #bc4c00;
+  --color-caution: #d1242f;
+  --color-important: #8250df;
+}
+
+</style>
+<style>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-note: #2f81f7;
+    --color-tip: #3fb950;
+    --color-warning: #d29922;
+    --color-severe: #db6d28;
+    --color-caution: #f85149;
+    --color-important: #a371f7;
+  }
+}
+
+</style>
+<style>
+.markdown-alert {
+  padding: 0.5rem 1rem;
+  margin-bottom: 16px;
+  color: inherit;
+  border-left: .25em solid #888;
+}
+
+.markdown-alert>:first-child {
+  margin-top: 0
+}
+
+.markdown-alert>:last-child {
+  margin-bottom: 0
+}
+
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: 500;
+  align-items: center;
+  line-height: 1
+}
+
+.markdown-alert .markdown-alert-title .octicon {
+  margin-right: 0.5rem;
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-alert.markdown-alert-note {
+  border-left-color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-important {
+  border-left-color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-warning {
+  border-left-color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-tip {
+  border-left-color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-caution {
+  border-left-color: var(--color-caution);
+}
+
+.markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--color-caution);
+}
+
+</style>
+        
+        </head>
+        <body class="vscode-body vscode-light">
+            <h1 id="testtimelockdao">TestTimelockDAO</h1>
+<p><code>TestTimelockDAO</code> is a Move module designed to test the core functionalities of the <code>TxScheduler</code> module. The <code>TxScheduler</code> module implements a basic timelock mechanism for scheduling, executing, and canceling transactions. This test module ensures the correctness of these functionalities through various test scenarios.</p>
+<h2 id="features">Features</h2>
+<p>The module provides the following test functionalities:</p>
+<ol>
+<li><strong>Initialization</strong>: Verify that the scheduler initializes correctly with an empty transaction map.</li>
+<li><strong>Transaction Queueing</strong>: Test the ability to queue transactions and ensure they are stored properly in the timelock state.</li>
+<li><strong>Timestamp Validation</strong>: Ensure that transactions with invalid timestamps (e.g., timestamps in the past) are not queued.</li>
+<li><strong>Transaction Execution</strong>: Test the ability to execute queued transactions after their timelock has expired.</li>
+<li><strong>Transaction Cancellation</strong>: Validate that transactions can be canceled by their owners and removed from the timelock state.</li>
+<li><strong>Unauthorized Cancellation</strong>: Ensure that transactions cannot be canceled by non-owners.</li>
+</ol>
+<h2 id="module-overview">Module Overview</h2>
+<h3 id="functions">Functions</h3>
+<h4 id="1-create_tx_data">1. <code>create_tx_data</code></h4>
+<p>Creates a dummy <code>TxData</code> structure for testing.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><code>owner</code>: Address of the transaction owner.</li>
+<li><code>target</code>: Target address of the transaction.</li>
+<li><code>function_name</code>: Function name to be executed.</li>
+<li><code>data</code>: Data payload for the transaction.</li>
+<li><code>timestamp</code>: Scheduled timestamp for execution.</li>
+</ul>
+<hr>
+<h4 id="2-test_initialize">2. <code>test_initialize</code></h4>
+<p>Tests the initialization of the <code>TxScheduler</code> module to ensure it starts with an empty transaction map.</p>
+<hr>
+<h4 id="3-test_queue_tx">3. <code>test_queue_tx</code></h4>
+<p>Tests queuing a transaction and verifies that the transaction is successfully added to the timelock state.</p>
+<hr>
+<h4 id="4-test_queue_invalid_timestamp">4. <code>test_queue_invalid_timestamp</code></h4>
+<p>Tests that transactions with timestamps in the past are not allowed to be queued.</p>
+<hr>
+<h4 id="5-test_execute_tx">5. <code>test_execute_tx</code></h4>
+<p>Tests the execution of a valid transaction after the timelock duration has passed. Verifies that the transaction is removed from the state.</p>
+<hr>
+<h4 id="6-test_cancel_tx">6. <code>test_cancel_tx</code></h4>
+<p>Tests the cancellation of a transaction by its owner. Ensures that the transaction is removed from the state.</p>
+<hr>
+<h4 id="7-test_cancel_tx_non_owner">7. <code>test_cancel_tx_non_owner</code></h4>
+<p>Tests that a transaction cannot be canceled by a non-owner, ensuring proper ownership enforcement.</p>
+<hr>
+<h2 id="usage">Usage</h2>
+<p>To run the tests provided in this module, use the <code>Test</code> framework in the Move environment. Follow these steps:</p>
+<ol>
+<li><strong>Compile the Module</strong>:
+Ensure the <code>TxScheduler</code> module is available in your project, and compile the <code>TestTimelockDAO</code> module:<pre><code class="language-bash">move build
+</code></pre>
+</li>
+</ol>
+<p>Run Tests: Execute the test suite:</p>
+<pre><code>move test
+</code></pre>
+<p>Queuing a Transaction
+This test ensures that a transaction can be successfully queued:</p>
+<pre><code>let mut state = TxScheduler::initialize(@0x1);
+let tx_id = b&quot;tx1&quot;;
+let current_time = 100;
+let tx_data = create_tx_data(@0x1, @0x2, b&quot;test_func&quot;, b&quot;test_data&quot;, current_time + 20);
+
+let queued = TxScheduler::queue_tx(&amp;mut state, tx_id, tx_data, current_time);
+Test::assert(queued, 1);
+Test::assert(table::contains(&amp;state.tx_map, tx_id), 2);
+</code></pre>
+<p>Canceling a Transaction by Non-Owner
+This test ensures only the owner of a transaction can cancel it:</p>
+<pre><code>let mut state = TxScheduler::initialize(@0x1);
+let tx_id = b&quot;tx5&quot;;
+let current_time = 100;
+let tx_data = create_tx_data(@0x1, @0x2, b&quot;test_func&quot;, b&quot;test_data&quot;, current_time + 20);
+
+let _ = TxScheduler::queue_tx(&amp;mut state, tx_id, tx_data, current_time);
+
+let canceled = TxScheduler::cancel_tx(&amp;mut state, tx_id, @0x3);
+Test::assert(!canceled, 8);
+</code></pre>
+
+            
+            
+        </body>
+        </html>
