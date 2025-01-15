@@ -3,8 +3,7 @@ name = "time_lock_DAO"
 version = "0.0.1"  
 
 [dependencies]  
-Sui = { git = "https://github.com/AJTECH0001/SUI_TIMELOCK_DAO.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }  
-time_lock_DAO = { git = "https://github.com/AJTECH0001/SUI_TIMELOCK_DAO.git", subdir = "crates/sui-framework/packages/time_lock_DAO", rev = "framework/testnet" }  
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }
 
 [addresses]  
 time_lock_DAO = "0x0"
