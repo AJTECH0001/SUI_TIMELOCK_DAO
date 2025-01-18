@@ -1,114 +1,65 @@
-# TestTimelockDAO
+# TimeLock DAO - Transaction Scheduler
 
-`TestTimelockDAO` is a Move module designed to test the core functionalities of the `TxScheduler` module. The `TxScheduler` module implements a basic timelock mechanism for scheduling, executing, and canceling transactions. This test module ensures the correctness of these functionalities through various test scenarios.
+## This Sui Move smart contract module implements a time-locked transaction scheduler for a Decentralized Autonomous Organization (DAO). It allows authorized users to schedule transactions that are executed after a specified delay, ensuring a transparent and controlled execution process.
 
-## Features
+### Key Features:
 
-The module provides the following test functionalities:
+**Transaction Scheduling:** Users can submit transactions specifying a target contract, function to call, and data to pass. These transactions are queued for execution after a configurable delay.
 
-1. **Initialization**: Verify that the scheduler initializes correctly with an empty transaction map.
-2. **Transaction Queueing**: Test the ability to queue transactions and ensure they are stored properly in the timelock state.
-3. **Timestamp Validation**: Ensure that transactions with invalid timestamps (e.g., timestamps in the past) are not queued.
-4. **Transaction Execution**: Test the ability to execute queued transactions after their timelock has expired.
-5. **Transaction Cancellation**: Validate that transactions can be canceled by their owners and removed from the timelock state.
-6. **Unauthorized Cancellation**: Ensure that transactions cannot be canceled by non-owners.
+**Time-Locking:** Transactions are not executed immediately but wait for a predefined minimum and maximum delay window. This allows for community review and potential cancellation before execution.
 
-## Module Overview
+**Authorization:** Only the transaction owner can cancel a scheduled transaction. A separate admin capability is used to update the minimum delay, maximum delay, and grace period parameters.
 
-### Functions
+**Event Emission:** The contract emits events for transaction queuing, execution, and cancellation, enabling monitoring and tracking of transaction lifecycles.
 
-#### 1. `create_tx_data`
+**Contract Structure:**
 
-Creates a dummy `TxData` structure for testing.
+### The contract is implemented using the Sui Move language and consists of several key components:
 
-**Parameters**:
+**Error Codes:** Defined constants representing various error conditions that can occur during transaction operations (e.g., unauthorized access, invalid timestamp).
 
-- `owner`: Address of the transaction owner.
-- `target`: Target address of the transaction.
-- `function_name`: Function name to be executed.
-- `data`: Data payload for the transaction.
-- `timestamp`: Scheduled timestamp for execution.
+**Constants:** Global variables for minimum delay, maximum delay, grace period, and maximum data length allowed in transactions.
 
----
+**Transaction Statuses:** Enumerated constants representing the possible states of a transaction (queued, executed, cancelled).
 
-#### 2. `test_initialize`
+**Capabilities:**
 
-Tests the initialization of the `TxScheduler` module to ensure it starts with an empty transaction map.
+``AdminCap``: A capability struct used to identify authorized admins who can update delay parameters.
 
----
+**Data Structures:**
 
-#### 3. `test_queue_tx`
+``TxData``: Struct representing a scheduled transaction with details like owner, target, function name, data, timestamp, status, and creation time.
 
-Tests queuing a transaction and verifies that the transaction is successfully added to the timelock state.
+``ContractState``: Struct representing the overall state of the time-lock scheduler, including the transaction queue (implemented as a Sui Move table), minimum delay, maximum delay, and grace period.
 
----
+**Events:**
 
-#### 4. `test_queue_invalid_timestamp`
+``TxQueued``: Emitted when a transaction is successfully added to the queue.
 
-Tests that transactions with timestamps in the past are not allowed to be queued.
+``TxExecuted``: Emitted when a queued transaction is executed.
 
----
+``TxCancelled``: Emitted when a scheduled transaction is cancelled by its owner.
 
-#### 5. `test_execute_tx`
+**Public Functions:**
 
-Tests the execution of a valid transaction after the timelock duration has passed. Verifies that the transaction is removed from the state.
+**initialize(ctx: &mut TxContext):** Initializes the contract by creating an admin capability and the contract state object.
 
----
+**queue_tx(state: &mut ContractState, tx_id: vector<u8>, target: address, function_name: vector<u8>, data: vector<u8>, timestamp: u64, ctx: &mut TxContext):** Schedules a new transaction. It performs various checks like authorization, timestamp validity, and data size before adding the transaction to the queue and emitting a ``TxQueued`` event.
 
-#### 6. `test_cancel_tx`
+**execute_tx(state: &mut ContractState, tx_id: vector<u8>, ctx:** &mut TxContext): Executes a queued transaction if it's within the valid time window (considering minimum delay, maximum delay, and grace period). It updates the transaction status, emits a ``TxExecuted`` event, and performs the actual execution (not implemented in this code example).
 
-Tests the cancellation of a transaction by its owner. Ensures that the transaction is removed from the state.
+**cancel_tx(state: &mut ContractState, tx_id: vector<u8>, ctx: &mut TxContext):** Cancels a scheduled transaction by its owner. It verifies ownership and transaction status before updating the status to cancelled and emitting a ``TxCancelled`` event.
 
----
+**update_delays(cap: &AdminCap, state: &mut ContractState, new_min_delay: u64, new_max_delay: u64, new_grace_period: u64):** Updates the minimum delay, maximum delay, and grace period parameters by an authorized admin. It performs validation to ensure the minimum delay is less than or equal to the maximum delay and the grace period is positive.
 
-#### 7. `test_cancel_tx_non_owner`
+**get_tx_details(state: &ContractState, tx_id: vector<u8>): Option<TxData>** Retrieves details of a specific transaction by its ID if it exists in the queue, returning ``None`` otherwise.
 
-Tests that a transaction cannot be canceled by a non-owner, ensuring proper ownership enforcement.
+**Getting Started:**
 
----
+Compile the Move code using the Sui compiler.
 
-## Usage
+Deploy the contract to your Sui testnet or development environment.
 
-To run the tests provided in this module, use the `Test` framework in the Move environment. Follow these steps:
+Interact with the contract functions using Sui Move transactions to schedule, execute, cancel transactions, and update delay parameters.
 
-1. **Compile the Module**:
-   Ensure the `TxScheduler` module is available in your project, and compile the `TestTimelockDAO` module:
-   ```bash
-   move build
-   ```
-
-Run Tests: Execute the test suite:
-```
-move test
-```
-
-Queuing a Transaction
-This test ensures that a transaction can be successfully queued:
-```
-let mut state = TxScheduler::initialize(@0x1);
-let tx_id = b"tx1";
-let current_time = 100;
-let tx_data = create_tx_data(@0x1, @0x2, b"test_func", b"test_data", current_time + 20);
-
-let queued = TxScheduler::queue_tx(&mut state, tx_id, tx_data, current_time);
-Test::assert(queued, 1);
-Test::assert(table::contains(&state.tx_map, tx_id), 2);
-```
-
-
-Canceling a Transaction by Non-Owner
-This test ensures only the owner of a transaction can cancel it:
-
-```
-let mut state = TxScheduler::initialize(@0x1);
-let tx_id = b"tx5";
-let current_time = 100;
-let tx_data = create_tx_data(@0x1, @0x2, b"test_func", b"test_data", current_time + 20);
-
-let _ = TxScheduler::queue_tx(&mut state, tx_id, tx_data, current_time);
-
-let canceled = TxScheduler::cancel_tx(&mut state, tx_id, @0x3);
-Test::assert(!canceled, 8);
-```
-
-
+**Note:** This code example provides a foundational implementation of a time-locked transaction scheduler. Additional features like access control mechanisms for specific functions and integration with other contracts for execution logic can be further built upon this base.
